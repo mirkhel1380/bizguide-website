@@ -5,7 +5,8 @@
   const cards = [...document.querySelectorAll('.journal-library .journal-card')];
   const count = document.querySelector('#journal-count');
   const empty = document.querySelector('#journal-empty');
-  let category = 'All';
+  const topic = new URLSearchParams(window.location.search).get('topic');
+  let category = buttons.some(button => button.dataset.filter === topic) ? topic : 'All';
   function update() {
     const query = search.value.trim().toLowerCase();
     let visible = 0;
@@ -23,4 +24,6 @@
     update();
   }));
   search.addEventListener('input', update);
+  buttons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.filter === category)));
+  update();
 })();
