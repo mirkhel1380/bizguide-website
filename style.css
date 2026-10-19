@@ -14,3 +14,6 @@ header{position:relative;z-index:30}.nav-dropdown{position:relative}.submenu-tog
 /* Shared dropdown placement and bounded panels. */
 .nav-submenu{max-height:min(620px,calc(100dvh - 150px));overflow-y:auto;overscroll-behavior:contain}.dropdown-align-right .nav-submenu{left:auto;right:-18px}
 @media(max-width:620px){.dropdown-align-right .nav-submenu{right:auto}.nav-submenu{max-height:65dvh}.navlinks.open{max-height:calc(100dvh - 85px);overflow-y:auto;overscroll-behavior:contain}}
+
+/* Clear referral information near recommendations, with an approval-only identity. */
+.affiliate-disclosure{display:block;color:#465d53;font-size:13px;line-height:1.75;max-width:700px;margin:18px 0}.affiliate-disclosure a{font-weight:600}.affiliate-identity{font-weight:700;color:#d8ef9b}.affiliate-identity[hidden]{display:none}
