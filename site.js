@@ -50,7 +50,7 @@ if (menu) menu.addEventListener('click', () => {
 // Shared header dropdowns for mouse, touch and keyboard navigation.
 (() => {
   const dropdowns = [...document.querySelectorAll('.nav-dropdown')];
-  const hover = window.matchMedia('(hover: hover) and (pointer: fine)');
+  const hover = window.matchMedia('(min-width: 621px) and (hover: hover) and (pointer: fine)');
   function setOpen(dropdown, open) {
     dropdown.querySelector('.submenu-toggle').setAttribute('aria-expanded', String(open));
     dropdown.querySelector('.nav-submenu').hidden = !open;
