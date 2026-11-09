@@ -125,3 +125,5 @@ header{box-shadow:0 1px 0 #14243e05}.brand span{display:inline-block}.navlinks a
 @media(max-width:620px){.menu{min-height:44px;padding:7px 14px}.submenu-toggle{min-height:44px}.footer-column a{min-height:24px;display:flex;align-items:center}.not-found{padding-top:50px;padding-bottom:55px}}
 
 .article .btn.alt{color:var(--ink)}
+
+.seo-breadcrumb{display:flex;flex-wrap:wrap;align-items:baseline;gap:7px 10px;font-size:12px;line-height:1.7;color:#52647b;margin:0 0 26px;overflow-wrap:anywhere}.seo-breadcrumb a{color:#334d73}.seo-breadcrumb [aria-current]{color:#52647b}.service-page .seo-breadcrumb,.compare-page .seo-breadcrumb{padding-top:26px;margin-bottom:0}.seo-reading{border-top:1px solid #dbe3ef;margin-top:38px;padding:30px 0}.seo-reading h2{font-size:28px}.seo-reading li{margin:10px 0}.article-top>.seo-breadcrumb{margin-bottom:28px}@media(max-width:620px){.seo-breadcrumb{font-size:11px;gap:6px 8px}.service-page .seo-breadcrumb,.compare-page .seo-breadcrumb{padding-top:22px}}
