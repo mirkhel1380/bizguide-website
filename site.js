@@ -92,3 +92,24 @@ if (menu) menu.addEventListener('click', () => {
     if (!document.querySelector('.navlinks')?.classList.contains('open')) closeOthers(null);
   });
 })();
+
+// Decorative hero motion is optional and respects the visitor’s motion preference.
+(() => {
+  const control = document.querySelector('.motion-control');
+  if (!control) return;
+  const root = document.documentElement;
+  const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let paused = false;
+  function update() {
+    const reduce = preference.matches;
+    root.classList.toggle('motion-enabled', !reduce);
+    root.classList.toggle('motion-paused', paused || reduce);
+    control.hidden = reduce;
+    control.setAttribute('aria-pressed', String(paused));
+    control.querySelector('.motion-control-label').textContent = paused ? 'Resume motion' : 'Pause motion';
+    control.querySelector('.motion-control-icon').textContent = paused ? '▷' : 'Ⅱ';
+  }
+  control.addEventListener('click', () => { paused = !paused; update(); });
+  preference.addEventListener('change', update);
+  update();
+})();
