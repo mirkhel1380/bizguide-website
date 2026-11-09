@@ -1,9 +1,31 @@
+// Shared mobile navigation: keep visibility, focus and ARIA state in sync.
 const menu = document.querySelector('.menu');
-if (menu) menu.addEventListener('click', () => {
+if (menu) {
   const nav = document.querySelector('.navlinks');
-  const open = nav.classList.toggle('open');
-  menu.setAttribute('aria-expanded', String(open));
-});
+  const mobile = window.matchMedia('(max-width: 620px)');
+  function closeMenu(returnFocus = false) {
+    nav.classList.remove('open');
+    menu.setAttribute('aria-expanded', 'false');
+    nav.querySelectorAll('.submenu-toggle').forEach(toggle => toggle.setAttribute('aria-expanded', 'false'));
+    nav.querySelectorAll('.nav-submenu').forEach(panel => { panel.hidden = true; });
+    if (returnFocus) menu.focus();
+  }
+  menu.addEventListener('click', () => {
+    if (nav.classList.contains('open')) closeMenu();
+    else { nav.classList.add('open'); menu.setAttribute('aria-expanded', 'true'); }
+  });
+  document.addEventListener('click', event => {
+    if (mobile.matches && !nav.contains(event.target) && !menu.contains(event.target)) closeMenu();
+  });
+  document.addEventListener('keydown', event => {
+    // A submenu consumes the first Escape; the next closes the mobile menu.
+    if (event.key === 'Escape' && !event.defaultPrevented && mobile.matches && nav.classList.contains('open')) {
+      closeMenu(true);
+      event.preventDefault();
+    }
+  });
+  mobile.addEventListener('change', () => closeMenu());
+}
 
 // Only enable referrals after written program acceptance and receipt of exact AWIN links.
 (() => {
@@ -71,7 +93,7 @@ if (menu) menu.addEventListener('click', () => {
       if (!dropdown.contains(event.relatedTarget)) setOpen(dropdown, false);
     });
     dropdown.addEventListener('keydown', event => {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && !panel.hidden) {
         setOpen(dropdown, false);
         toggle.focus();
         event.preventDefault();
