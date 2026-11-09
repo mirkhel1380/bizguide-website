@@ -1,4 +1,15 @@
 (() => {
+  document.querySelectorAll('[data-copy-article]').forEach(button => {
+    button.addEventListener('click', async () => {
+      const status = button.closest('.article-share').querySelector('.share-status');
+      try {
+        await navigator.clipboard.writeText(button.dataset.copyArticle);
+        status.textContent = 'Article link copied.';
+      } catch {
+        status.textContent = 'Copy this address: ' + button.dataset.copyArticle;
+      }
+    });
+  });
   const search = document.querySelector('#journal-search');
   if (!search) return;
   const buttons = [...document.querySelectorAll('[data-filter]')];
