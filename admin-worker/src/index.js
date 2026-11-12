@@ -4,6 +4,7 @@
  * No payment endpoints, order mutations, RAI requests or customer PII.
  */
 import { createRemoteJWKSet, jwtVerify } from "jose";
+import { dashboardHtml } from "./dashboard.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status,
@@ -45,6 +46,15 @@ export default {
     if (!(await authorized(request, env))) return reject(401);
     const url = new URL(request.url);
     if (request.method !== "GET") return json({ error: "Method not allowed" }, 405);
+    if (url.pathname === "/admin" || url.pathname === "/admin/") {
+      return new Response(dashboardHtml, { headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
+        "Referrer-Policy": "no-referrer"
+      } });
+    }
     if (url.pathname === "/api/admin/health") {
       return json({ ok: true, mode: "read-only", liveOrdersEnabled: false });
     }
