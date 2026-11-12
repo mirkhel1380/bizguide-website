@@ -49,6 +49,24 @@
       cell(tr, next[o.status]); tbody.appendChild(tr);
     }
   }
+  const sampleForm = document.getElementById('demo-quote-form');
+  let sampleNumber = 2000;
+  sampleForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const state = document.getElementById('demo-state').value;
+    const service = document.getElementById('demo-service').value;
+    const stateNames = {WY:'Wyoming',DE:'Delaware',TX:'Texas',FL:'Florida',CA:'California'};
+    orders.unshift({
+      id: 'DEMO-' + (++sampleNumber),
+      service,
+      state: stateNames[state],
+      payment: 'Not collected',
+      status: 'quote_requested'
+    });
+    filter.value = 'all';
+    document.getElementById('demo-quote-message').textContent = 'Sample request added to this demo only — not saved.';
+    render();
+  });
   filter.addEventListener('change', render);
   document.getElementById('reset').addEventListener('click', () => { orders = initial.map(row => ({...row})); filter.value='all'; render(); });
   render();
