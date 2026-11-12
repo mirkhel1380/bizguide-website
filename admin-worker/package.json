@@ -6,7 +6,9 @@
     "check": "node --check src/index.js",
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "test": "node --test"
+    "test": "node --test",
+    "predeploy": "node scripts/check-config.js",
+    "check:config": "node scripts/check-config.js"
   },
   "dependencies": {
     "jose": "^6.0.0"
