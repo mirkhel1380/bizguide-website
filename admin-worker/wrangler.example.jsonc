@@ -1,0 +1,23 @@
+{
+  // TEMPLATE ONLY — copy to wrangler.jsonc after configuring Cloudflare Access and D1.
+  // Never deploy this example with placeholder values.
+  "name": "bizguide-admin-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-12",
+  "workers_dev": false,
+  // Publish only on a dedicated admin hostname or route protected by Cloudflare Access.
+  // Add a route only after verifying your domain's zone and Access policy.
+  "vars": {
+    "CF_ACCESS_TEAM_DOMAIN": "https://REPLACE-WITH-TEAM.cloudflareaccess.com",
+    "CF_ACCESS_AUD": "REPLACE_WITH_ACCESS_APPLICATION_AUD",
+    "ADMIN_EMAIL": "REPLACE_WITH_ADMIN_EMAIL"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "bizguide-orders",
+      "database_id": "REPLACE_WITH_REAL_D1_DATABASE_UUID",
+      "migrations_dir": "../migrations"
+    }
+  ]
+}
