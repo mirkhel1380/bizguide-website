@@ -5,10 +5,14 @@ on:
       - feature/wholesale-services-preview
     paths:
       - 'admin-worker/**'
+      - 'migrations/**'
+      - 'tests/test_orders_schema.py'
       - '.github/workflows/admin-worker-tests.yml'
   pull_request:
     paths:
       - 'admin-worker/**'
+      - 'migrations/**'
+      - 'tests/test_orders_schema.py'
   workflow_dispatch:
 
 permissions:
@@ -33,3 +37,6 @@ jobs:
         run: npm run check
       - name: Run security tests
         run: npm test
+      - name: Check D1-compatible migration locally
+        run: python3 -m unittest discover -s tests -p 'test_orders_schema.py' -v
+        working-directory: .
