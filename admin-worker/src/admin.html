@@ -6,7 +6,7 @@
 <header><strong>BizGuide · Admin</strong><span>Protected operations</span></header>
 <main><h1>Order overview</h1><p class="muted">Read-only metadata. This screen requires verified Cloudflare Access authentication.</p><p class="notice">Orders cannot be edited, paid or submitted to RAI from this page.</p>
 <div class="panel"><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between"><h2>Orders</h2><div><label for="filter">Status </label><select id="filter"><option value="">All</option><option value="quote_requested">Quote requested</option><option value="paid_verified">Payment verified</option><option value="review_required">Review required</option><option value="submitted_to_provider">Submitted</option><option value="processing">Processing</option><option value="complete">Complete</option></select> <button type="button" id="refresh">Refresh</button></div></div>
-<p id="message" role="status">Loading...</p><table><thead><tr><th>Order ID</th><th>State</th><th>Status</th><th>Quoted total</th><th>Created</th></tr></thead><tbody id="orders"></tbody></table></div>
+<p id="message" role="status">Loading...</p><table><thead><tr><th>Order ID</th><th>State</th><th>Status</th><th>Quoted total</th><th>Created</th><th>Review</th></tr></thead><tbody id="orders"></tbody></table></div>
 <section class="panel" style="margin-top:24px" aria-labelledby="new-quote-title">
 <h2 id="new-quote-title">New quote request · Staff only</h2>
 <p class="muted">Non-sensitive selections only. No customer name, SSN, payment or address. Saving requires a protected backend and an explicitly enabled feature.</p>
@@ -43,7 +43,24 @@ for(const item of data.orders){
 const tr=document.createElement('tr');
 add(tr,String(item.id??''));add(tr,String(item.state_code??''));add(tr,String(item.status??''));
 add(tr,item.quoted_total_cents==null?'Not quoted':new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(item.quoted_total_cents/100));
-add(tr,String(item.created_at??''));rows.appendChild(tr);
+add(tr,String(item.created_at??''));
+const actionCell=document.createElement('td');
+if(['quote_requested','review_required'].includes(item.status)){
+const button=document.createElement('button');
+button.type='button';button.textContent=item.status==='quote_requested'?'Mark for review':'Return to quote';
+button.addEventListener('click',async()=>{
+const next=item.status==='quote_requested'?'review_required':'quote_requested';
+if(!confirm('Change review status for '+item.id+'?'))return;
+button.disabled=true;
+try{
+const res=await fetch('/api/admin/review-status',{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId:item.id,fromStatus:item.status,toStatus:next})});
+if(!res.ok)throw Error(res.status===503?'Review changes not enabled yet.':'Update failed. Refresh and try again.');
+await load();
+}catch(error){message.textContent=error.message;button.disabled=false;}
+});
+actionCell.appendChild(button);
+}else{actionCell.textContent='—';}
+tr.appendChild(actionCell);rows.appendChild(tr);
 }
 message.textContent=data.orders.length?data.orders.length+' order(s) shown.':'No orders found.';
 }catch(err){message.textContent=err.message||'Unable to load orders.';}
