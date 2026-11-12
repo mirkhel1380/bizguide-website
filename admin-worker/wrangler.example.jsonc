@@ -5,8 +5,14 @@
   "main": "src/index.js",
   "compatibility_date": "2026-11-12",
   "workers_dev": false,
+  "preview_urls": false,
   // Publish only on a dedicated admin hostname or route protected by Cloudflare Access.
   // Add a route only after verifying your domain's zone and Access policy.
+  // Replace the example route with a verified dedicated hostname.
+  // Protect it with a Cloudflare Access application and MFA.
+  "routes": [
+    { "pattern": "admin.REPLACE_WITH_VERIFIED_DOMAIN", "zone_name": "REPLACE_WITH_VERIFIED_DOMAIN" }
+  ],
   "vars": {
     "CF_ACCESS_TEAM_DOMAIN": "https://REPLACE-WITH-TEAM.cloudflareaccess.com",
     "CF_ACCESS_AUD": "REPLACE_WITH_ACCESS_APPLICATION_AUD",
