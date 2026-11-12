@@ -22,7 +22,7 @@
     {
       "binding": "DB",
       "database_name": "bizguide-orders",
-      "database_id": "REPLACE_WITH_REAL_D1_DATABASE_UUID",
+      "database_id": "41aaa0ae-c912-4101-a47c-7eed64d627cf",
       "migrations_dir": "../migrations"
     }
   ]
