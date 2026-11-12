@@ -1,11 +1,13 @@
 /**
  * BizGuide admin API starter — NOT DEPLOYED.
- * Read-only orders, gated by a verified Cloudflare Access JWT.
+ * Protected order reading, with an optional disabled-by-default staff quote-draft endpoint.
  * No payment endpoints, order mutations, RAI requests or customer PII.
  */
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { dashboardHtml } from "./dashboard.js";
 import { allowedStatuses, listOrders } from "./orders.js";
+import { saveQuoteDraft } from "./quote-drafts.js";
+import { parseAdminQuoteRequest } from "./admin-quote-request.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status,
@@ -46,6 +48,19 @@ export default {
     // No Access means no admin functionality.
     if (!(await authorized(request, env))) return reject(401);
     const url = new URL(request.url);
+    if (url.pathname === "/api/admin/quote-drafts" && request.method === "POST") {
+      // Explicitly disabled until staff identity, Access and D1 have been deployed and reviewed.
+      if (env.ENABLE_STAFF_QUOTE_DRAFTS !== "true") return json({ error: "Not enabled" }, 503);
+      if (!env.DB) return json({ error: "Database not configured" }, 503);
+      const parsed = await parseAdminQuoteRequest(request);
+      if (parsed.error) return json({ error: parsed.error }, parsed.status);
+      try {
+        const result = await saveQuoteDraft(env.DB, parsed.quote);
+        return json(result, 201);
+      } catch {
+        return json({ error: "Unable to save quote draft" }, 503);
+      }
+    }
     if (request.method !== "GET") return json({ error: "Method not allowed" }, 405);
     if (url.pathname === "/admin" || url.pathname === "/admin/") {
       return new Response(dashboardHtml, { headers: {
