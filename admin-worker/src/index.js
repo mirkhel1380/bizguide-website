@@ -5,6 +5,7 @@
  */
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { dashboardHtml } from "./dashboard.js";
+import { allowedStatuses, listOrders } from "./orders.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status,
@@ -60,18 +61,10 @@ export default {
     }
     if (url.pathname !== "/api/admin/orders") return json({ error: "Not found" }, 404);
     if (!env.DB) return json({ error: "Database not configured" }, 503);
-    const allowedStatuses = new Set([
-      "draft", "quote_requested", "quoted", "customer_accepted",
-      "payment_pending", "paid_verified", "review_required",
-      "submitted_to_provider", "processing", "complete", "cancelled", "refunded"
-    ]);
     const status = url.searchParams.get("status");
     if (status && !allowedStatuses.has(status)) return json({ error: "Invalid status" }, 400);
-    const query = status
-      ? env.DB.prepare("SELECT id, state_code, company_status, status, currency, quoted_total_cents, created_at FROM orders WHERE status = ? ORDER BY created_at DESC LIMIT 50").bind(status)
-      : env.DB.prepare("SELECT id, state_code, company_status, status, currency, quoted_total_cents, created_at FROM orders ORDER BY created_at DESC LIMIT 50");
     try {
-      const { results = [] } = await query.all();
+      const results = await listOrders(env.DB, status);
       return json({ orders: results, mode: "read-only" });
     } catch {
       return json({ error: "Orders are not ready" }, 503);
