@@ -10,6 +10,16 @@
 <section class="panel" aria-label="Sample order tracker"><div class="tools"><h2>Example orders</h2><div><label for="filter">Filter by status: </label><select id="filter"><option value="all">All statuses</option><option value="quote_requested">Quote requested</option><option value="payment_verified">Payment verified</option><option value="review_required">Review required</option><option value="submitted_to_provider">Submitted to provider</option><option value="processing">Processing</option><option value="complete">Complete</option></select></div></div>
 <div class="scroll"><table><thead><tr><th>Example ID</th><th>Service</th><th>State</th><th>Payment</th><th>Fulfillment status</th><th>Next step</th></tr></thead><tbody id="orders"></tbody></table></div>
 <p id="empty" hidden>No demo orders match this filter.</p><p style="font-size:.85rem;color:#60758a">You can change sample order statuses here to explore the workflow. This does not create orders or contact RAI.</p><button type="button" id="reset">Reset demo records</button></section>
+<section class="panel" style="margin-top:22px" aria-labelledby="demo-quote-title">
+<h2 id="demo-quote-title">Create a sample quote request</h2>
+<p class="subtitle">Demo only. Use invented selections, not customer details. No data leaves this browser or survives a reload.</p>
+<form id="demo-quote-form">
+<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:end">
+<label>State<br><select id="demo-state" required><option value="WY">Wyoming</option><option value="DE">Delaware</option><option value="TX">Texas</option><option value="FL">Florida</option><option value="CA">California</option></select></label>
+<label>Service<br><select id="demo-service" required><option value="LLC Formation">LLC Formation</option><option value="Registered Agent">Registered Agent</option><option value="EIN Assistance (with SSN)">EIN Assistance (with SSN)</option><option value="EIN Assistance (without SSN)">EIN Assistance (without SSN)</option></select></label>
+<button type="submit">Add sample request</button></div>
+<p id="demo-quote-message" role="status" aria-live="polite"></p>
+</form></section>
 <section style="margin:38px 0"><h2>Production safeguards required</h2><p class="subtitle">Real operations will require private staff authentication, a secure order database, verified payment webhooks, permission and audit records, state-fee validation, customer consent and controlled manual submission to RAI. Never change an order to “Payment verified” based only on a browser redirect.</p></section>
 </main><footer>BizGuide — operated by Basirm LLC. Internal design preview. Not a functional customer portal; all data is fictional.</footer>
 <script src="order-operations-preview.js"></script></body></html>
