@@ -7,6 +7,7 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 import { dashboardHtml } from "./dashboard.js";
 import { allowedStatuses, listOrders } from "./orders.js";
 import { saveQuoteDraft } from "./quote-drafts.js";
+import { changeReviewStatus } from "./review-status.js";
 import { parseAdminQuoteRequest } from "./admin-quote-request.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
@@ -48,6 +49,31 @@ export default {
     // No Access means no admin functionality.
     if (!(await authorized(request, env))) return reject(401);
     const url = new URL(request.url);
+    if (url.pathname === "/api/admin/review-status" && request.method === "POST") {
+      if (env.ENABLE_STAFF_REVIEW_CHANGES !== "true") return json({error:"Not enabled"},503);
+      if (!env.DB) return json({error:"Database not configured"},503);
+      if (request.headers.get("Origin") !== url.origin ||
+          request.headers.get("Content-Type")?.split(";")[0].trim().toLowerCase() !== "application/json")
+        return json({error:"Same-origin JSON required"},403);
+      if (Number(request.headers.get("Content-Length") || 0) > 512)
+        return json({error:"Request too large"},413);
+      let input;
+      try {
+        const raw=await request.text();
+        if (raw.length>512) return json({error:"Request too large"},413);
+        input=JSON.parse(raw);
+        if (!input || typeof input!=="object" || Array.isArray(input) ||
+            Object.keys(input).sort().join(",")!=="fromStatus,orderId,toStatus")
+          return json({error:"Invalid request"},400);
+      } catch { return json({error:"Invalid request"},400); }
+      try {
+        const result=await changeReviewStatus(env.DB,input.orderId,input.fromStatus,input.toStatus);
+        return result.changed ? json(result) : json({error:"Order status changed or order not found"},409);
+      } catch(e) {
+        if(e instanceof TypeError) return json({error:"Invalid transition"},400);
+        return json({error:"Unable to update order"},503);
+      }
+    }
     if (url.pathname === "/api/admin/quote-drafts" && request.method === "POST") {
       // Explicitly disabled until staff identity, Access and D1 have been deployed and reviewed.
       if (env.ENABLE_STAFF_QUOTE_DRAFTS !== "true") return json({ error: "Not enabled" }, 503);
