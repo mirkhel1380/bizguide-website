@@ -7,6 +7,24 @@
 <main><h1>Order overview</h1><p class="muted">Read-only metadata. This screen requires verified Cloudflare Access authentication.</p><p class="notice">Orders cannot be edited, paid or submitted to RAI from this page.</p>
 <div class="panel"><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between"><h2>Orders</h2><div><label for="filter">Status </label><select id="filter"><option value="">All</option><option value="quote_requested">Quote requested</option><option value="paid_verified">Payment verified</option><option value="review_required">Review required</option><option value="submitted_to_provider">Submitted</option><option value="processing">Processing</option><option value="complete">Complete</option></select> <button type="button" id="refresh">Refresh</button></div></div>
 <p id="message" role="status">Loading...</p><table><thead><tr><th>Order ID</th><th>State</th><th>Status</th><th>Quoted total</th><th>Created</th></tr></thead><tbody id="orders"></tbody></table></div>
+<section class="panel" style="margin-top:24px" aria-labelledby="new-quote-title">
+<h2 id="new-quote-title">New quote request · Staff only</h2>
+<p class="muted">Non-sensitive selections only. No customer name, SSN, payment or address. Saving requires a protected backend and an explicitly enabled feature.</p>
+<form id="quote-form">
+<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:end">
+<label>State (2-letter code)<br><input id="quote-state" required maxlength="2" minlength="2" pattern="[A-Za-z]{2}" placeholder="WY" autocomplete="off" style="padding:10px;border:1px solid #ccd9e4;border-radius:9px;width:100px"></label>
+<label>Company status<br><select id="quote-company"><option value="not_formed">Not formed</option><option value="formed">Already formed</option><option value="unsure">Unsure</option></select></label>
+</div>
+<fieldset style="border:1px solid #dae5eb;border-radius:10px;margin:16px 0;padding:14px"><legend>Services</legend>
+<label><input type="checkbox" name="quote-service" value="llc_formation"> LLC Formation</label>
+<label><input type="checkbox" name="quote-service" value="registered_agent"> Registered Agent</label>
+<label><input type="checkbox" name="quote-service" value="ein_with_ssn"> EIN (with SSN)</label>
+<label><input type="checkbox" name="quote-service" value="ein_without_ssn"> EIN (without SSN)</label>
+</fieldset>
+<button id="quote-submit" type="submit">Save draft</button>
+<p id="quote-message" role="status" aria-live="polite"></p>
+</form>
+</section>
 <footer>BizGuide · Internal use only · No sensitive documents or payment card data.</footer></main>
 <script>
 (()=>{
@@ -31,5 +49,31 @@ message.textContent=data.orders.length?data.orders.length+' order(s) shown.':'No
 }catch(err){message.textContent=err.message||'Unable to load orders.';}
 }
 filter.addEventListener('change',load);document.getElementById('refresh').addEventListener('click',load);load();
+const quoteForm=document.getElementById('quote-form'),quoteMessage=document.getElementById('quote-message');
+quoteForm.addEventListener('submit',async event=>{
+event.preventDefault();
+const services=Array.from(quoteForm.querySelectorAll('input[name="quote-service"]:checked'),input=>input.value);
+if(services.length===0){quoteMessage.textContent='Select at least one service.';return;}
+if(services.includes('ein_with_ssn')&&services.includes('ein_without_ssn')){
+quoteMessage.textContent='Choose only one EIN option.';return;
+}
+const state=document.getElementById('quote-state').value.trim().toUpperCase();
+const companyStatus=document.getElementById('quote-company').value;
+const submit=document.getElementById('quote-submit');
+submit.disabled=true;quoteMessage.textContent='Submitting…';
+try{
+const response=await fetch('/api/admin/quote-drafts',{
+method:'POST',credentials:'same-origin',cache:'no-store',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({state,companyStatus,services})
+});
+const data=await response.json().catch(()=>({}));
+if(!response.ok)throw Error(response.status===503?'Saving is not enabled yet.':(data.error||'Unable to save draft.'));
+quoteMessage.textContent='Draft saved: '+String(data.id||'unknown');
+quoteForm.reset();await load();
+}catch(error){quoteMessage.textContent=error.message||'Unable to save draft.';}
+finally{submit.disabled=false;}
+});
+
 })();
 </script></body></html>
