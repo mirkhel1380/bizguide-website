@@ -6,7 +6,7 @@ Status: draft for owner approval, not a quote or binding price list. Do not publ
 |---|---:|---:|---|---:|
 | LLC formation | $75 | $149 | Additional, state-dependent | $74 |
 | Registered agent (annual) | $45 | $99 / year | If applicable, disclose separately | $54 |
-| EIN assistance, eligible applicant with SSN | $25 | $79 | Usually no government EIN application fee | $54 |
+| EIN assistance, eligible applicant with SSN | $25 | $49 | Usually no government EIN application fee | $24 |
 | EIN assistance, applicant without SSN | $100 | $149 | Usually no government EIN application fee | $49 |
 
 ## Rules before prices appear on a public page
@@ -20,4 +20,4 @@ Status: draft for owner approval, not a quote or binding price list. Do not publ
 - For payment launch: secure processor, verified server-side webhook, correct total, explicit customer authorization and manual fulfillment in RAI.
 - Keep provider comparison/affiliate pages separate from direct-service checkout and disclose relationships where applicable.
 
-Next owner decision: confirm or adjust **$149 formation / $99 yearly agent / $79 EIN with SSN / $149 EIN without SSN** before doing any public design or checkout work.
+Next owner decision: confirm or adjust **$149 formation / $99 yearly agent / $49 EIN with SSN / $149 EIN without SSN** before doing any public design or checkout work.
