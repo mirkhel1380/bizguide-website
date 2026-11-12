@@ -1,0 +1,35 @@
+name: Admin Worker Security Tests
+on:
+  push:
+    branches:
+      - feature/wholesale-services-preview
+    paths:
+      - 'admin-worker/**'
+      - '.github/workflows/admin-worker-tests.yml'
+  pull_request:
+    paths:
+      - 'admin-worker/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-admin-worker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin-worker
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Check JavaScript syntax
+        run: npm run check
+      - name: Run security tests
+        run: npm test
