@@ -6,7 +6,7 @@
 <header><strong>BizGuide · Admin</strong><span>Protected operations</span></header>
 <main><h1>Order overview</h1><p class="muted">Read-only metadata. This screen requires verified Cloudflare Access authentication.</p><p class="notice">Orders cannot be edited, paid or submitted to RAI from this page.</p>
 <div class="panel"><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between"><h2>Orders</h2><div><label for="filter">Status </label><select id="filter"><option value="">All</option><option value="quote_requested">Quote requested</option><option value="paid_verified">Payment verified</option><option value="review_required">Review required</option><option value="submitted_to_provider">Submitted</option><option value="processing">Processing</option><option value="complete">Complete</option></select> <button type="button" id="refresh">Refresh</button></div></div>
-<p id="message" role="status">Loading...</p><table><thead><tr><th>Order ID</th><th>Service</th><th>State</th><th>Status</th><th>Quoted total</th><th>Created</th><th>Review</th></tr></thead><tbody id="orders"></tbody></table></div>
+<p id="message" role="status">Loading...</p><table><thead><tr><th>Order ID</th><th>Service</th><th>State</th><th>Status</th><th>Quoted total</th><th>Created</th><th>Review</th><th>History</th></tr></thead><tbody id="orders"></tbody></table></div>
 <section class="panel" style="margin-top:24px" aria-labelledby="new-quote-title">
 <h2 id="new-quote-title">New quote request · Staff only</h2>
 <p class="muted">Non-sensitive selections only. No customer name, SSN, payment or address. Saving requires a protected backend and an explicitly enabled feature.</p>
@@ -24,6 +24,13 @@
 <button id="quote-submit" type="submit">Save draft</button>
 <p id="quote-message" role="status" aria-live="polite"></p>
 </form>
+</section>
+<section class="panel" style="margin-top:24px" aria-labelledby="demo-order-title">
+<h2 id="demo-order-title">Create test order</h2>
+<p class="muted">Demo entries only. No actual filing, customer details or charges. This feature is disabled until explicitly enabled by the owner.</p>
+<form id="demo-order-form"><label>State <select id="demo-state"><option value="WY">Wyoming</option><option value="DE">Delaware</option><option value="TX">Texas</option><option value="FL">Florida</option></select></label>
+<label>Service <select id="demo-service"><option value="llc_formation">LLC Formation</option><option value="registered_agent">Registered Agent</option><option value="ein_with_ssn">EIN with SSN</option><option value="ein_without_ssn">EIN without SSN</option></select></label>
+<button type="submit">Create Test Order</button><p id="demo-result" role="status"></p></form>
 </section>
 <footer>BizGuide · Internal use only · No sensitive documents or payment card data.</footer></main>
 <script>
@@ -60,12 +67,37 @@ await load();
 });
 actionCell.appendChild(button);
 }else{actionCell.textContent='—';}
-tr.appendChild(actionCell);rows.appendChild(tr);
+tr.appendChild(actionCell);
+const historyCell=document.createElement('td');
+const historyButton=document.createElement('button');
+historyButton.type='button';historyButton.textContent='History';
+historyButton.addEventListener('click',async()=>{
+try{
+const response=await fetch('/api/admin/order-history?id='+encodeURIComponent(item.id),{credentials:'same-origin',cache:'no-store'});
+if(!response.ok)throw Error('Unable to fetch history');
+const data=await response.json();
+alert((data.history||[]).length ? data.history.map(h=>h.created_at+': '+(h.from_status||'created')+' → '+(h.to_status||'—')).join('\\n') : 'No history');
+}catch(error){message.textContent=error.message;}
+});
+historyCell.appendChild(historyButton);tr.appendChild(historyCell);rows.appendChild(tr);
 }
 message.textContent=data.orders.length?data.orders.length+' order(s) shown.':'No orders found.';
 }catch(err){message.textContent=err.message||'Unable to load orders.';}
 }
 filter.addEventListener('change',load);document.getElementById('refresh').addEventListener('click',load);load();
+const demoForm=document.getElementById('demo-order-form');
+demoForm.addEventListener('submit',async event=>{
+event.preventDefault();
+const result=document.getElementById('demo-result');
+result.textContent='Creating demo order…';
+try{
+const response=await fetch('/api/admin/create-order',{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:document.getElementById('demo-state').value,service:document.getElementById('demo-service').value})});
+const data=await response.json();
+if(!response.ok)throw Error(data.error||'Unable to create order');
+result.textContent='Created '+data.id;
+await load();
+}catch(error){result.textContent=error.message;}
+});
 const quoteForm=document.getElementById('quote-form'),quoteMessage=document.getElementById('quote-message');
 quoteForm.addEventListener('submit',async event=>{
 event.preventDefault();
