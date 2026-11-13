@@ -87,6 +87,36 @@ export default {
         return json({ error: "Unable to save quote draft" }, 503);
       }
     }
+    if (url.pathname === "/api/admin/create-order" && request.method === "POST") {
+      // Safely scoped to DEMO records, disabled by default. Never accepts identity or payment data.
+      if (env.ENABLE_DEMO_ORDERS !== "true") return json({error:"Demo creation disabled"},503);
+      if (!env.DB) return json({error:"Database unavailable"},503);
+      const contentType=request.headers.get("Content-Type")?.split(";")[0]?.trim().toLowerCase();
+      if (request.headers.get("Origin") !== url.origin || contentType !== "application/json")
+        return json({error:"Same-origin JSON required"},403);
+      if (Number(request.headers.get("Content-Length") || 0) > 512)
+        return json({error:"Request too large"},413);
+      let input;
+      try {
+        const raw=await request.text();
+        if (raw.length>512) return json({error:"Request too large"},413);
+        input=JSON.parse(raw);
+      } catch { return json({error:"Invalid JSON"},400); }
+      if (!input || typeof input!=="object" || Array.isArray(input) ||
+          Object.keys(input).sort().join(",")!=="service,state" ||
+          !["llc_formation","registered_agent","ein_with_ssn","ein_without_ssn"].includes(input.service) ||
+          !["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"].includes(input.state))
+        return json({error:"Invalid selections"},400);
+      const id="DEMO-"+crypto.randomUUID();
+      try {
+        await env.DB.batch([
+          env.DB.prepare("INSERT INTO orders (id, state_code, company_status, status) VALUES (?, ?, 'unsure', 'quote_requested')").bind(id,input.state),
+          env.DB.prepare("INSERT INTO order_services (order_id, service_code) VALUES (?, ?)").bind(id,input.service),
+          env.DB.prepare("INSERT INTO order_audit (order_id, actor_type, action, to_status) VALUES (?, 'staff', 'demo_created', 'quote_requested')").bind(id)
+        ]);
+        return json({id,status:"quote_requested"},201);
+      } catch { return json({error:"Unable to create demo order"},503); }
+    }
     if (request.method !== "GET") return json({ error: "Method not allowed" }, 405);
     if (url.pathname === "/admin" || url.pathname === "/admin/") {
       return new Response(dashboardHtml, { headers: {
@@ -99,6 +129,17 @@ export default {
     }
     if (url.pathname === "/api/admin/health") {
       return json({ ok: true, mode: "read-only", liveOrdersEnabled: false });
+    }
+    if (url.pathname === "/api/admin/order-history") {
+      if (!env.DB) return json({error:"Database unavailable"},503);
+      const id=url.searchParams.get("id");
+      if (!id || !/^[a-zA-Z0-9-]{1,64}$/.test(id)) return json({error:"Invalid order ID"},400);
+      try {
+        const {results=[]}=await env.DB.prepare(
+          "SELECT action, actor_type, from_status, to_status, created_at FROM order_audit WHERE order_id = ? ORDER BY id DESC LIMIT 50"
+        ).bind(id).all();
+        return json({history:results});
+      } catch { return json({error:"History unavailable"},503); }
     }
     if (url.pathname !== "/api/admin/orders") return json({ error: "Not found" }, 404);
     if (!env.DB) return json({ error: "Database not configured" }, 503);
