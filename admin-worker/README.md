@@ -1,26 +1,35 @@
-# BizGuide Admin API — starter (NOT DEPLOYED)
+# BizGuide Admin Worker — protected staging source
 
-This directory contains an **admin-only, read-only** Cloudflare Worker starter. It is not connected to the live website and it is **not a production-ready order-management system**.
+This directory contains the **GitHub source candidate** for a protected admin Cloudflare Worker. It is **not the same artifact as the currently deployed** `bizguide-admin-api` Worker, which was created and edited in the Cloudflare dashboard. Do not deploy or connect automated builds until the existing live code and settings have been backed up and checked for parity.
 
-## Purpose
+## Implemented features in this source
 
-- Enforce Cloudflare Access JWT verification (signature / issuer / audience).
-- Require a configured admin email in the signed JWT.
-- Read a **limited metadata-only** order list from Cloudflare D1.
-- Reject all POST/PUT/PATCH/DELETE methods.
-- Keep all payment processing, customer personal information and RAI credentials out of scope.
+- Verify Cloudflare Access JWT signature, issuer, audience, and exact admin email (fail closed).
+- List at most 50 orders from D1, including aggregated service codes; optional whitelisted status filter.
+- Show per-order audit history using `GET /api/admin/order-history?id=...`.
+- Manual staff `quote_requested` / `review_required` transitions only via `POST /api/admin/review-status`, behind `ENABLE_STAFF_REVIEW_CHANGES=true`.
+- Generate **test-only** order records (IDs prefixed `DEMO-`) via `POST /api/admin/create-order`, behind `ENABLE_DEMO_ORDERS=true`. Never creates payments, filings, or real customer orders.
+- Staff quote drafts via `POST /api/admin/quote-drafts`, behind `ENABLE_STAFF_QUOTE_DRAFTS=true`; disabled for initial deployment.
+- All routes require verified admin Cloudflare Access authentication. Write endpoints require same-origin JSON requests.
 
-## Prerequisites for later deployment
+### Read-only routes
 
-1. Create a separate Worker route / hostname protected by **Cloudflare Access** with an identity-restricted policy and MFA.
-2. Bind a Cloudflare D1 database to Worker variable `DB` and apply `migrations/0001_orders.sql` after review.
-3. Configure Worker environment values (never commit account identifiers or secrets):
-   - `CF_ACCESS_TEAM_DOMAIN` e.g. `https://your-team.cloudflareaccess.com` (without trailing slash)
-   - `CF_ACCESS_AUD` Cloudflare Access application audience
-   - `ADMIN_EMAIL` the single allowed admin identity
-4. Install dependencies with `npm install`; test with `npm run check`. Review and pin dependencies before real deployment.
-5. Add network restrictions, security testing, audit logging, and production environment configuration before turning on real orders.
+`GET /admin`, `GET /api/admin/health`, `GET /api/admin/orders`, `GET /api/admin/order-history`.
 
-Routes (both protected; `GET` only): `/api/admin/health`, `/api/admin/orders` (optional `?status=` filter).
+### Write routes
 
-**Important:** Never use a public GitHub Pages page to hold customer data. The previous `order-operations-preview.html` remains fictional and separate. Do not provide Access tokens, credentials or customer records in chat. Do not deploy this code until identity and DB configuration are reviewed.
+`POST /api/admin/review-status`, `POST /api/admin/create-order`, `POST /api/admin/quote-drafts` — all feature-gated as noted above.
+
+## Current deployment blockers
+
+1. The Cloudflare-deployed Worker has not been backed up or compared with this source, so an overwrite could remove live features.
+2. There is deliberately **no active `wrangler.jsonc`**. `wrangler.example.jsonc` is a non-deployable template with placeholder routes and Access settings.
+3. Existing Cloudflare Access **All traffic** protection and MFA, the D1 `DB` binding, and live Worker variables must be preserved.
+4. A production deploy from the GitHub repository root would target the wrong directory. See [DEPLOYMENT_HANDOFF.md](DEPLOYMENT_HANDOFF.md).
+5. Do not put SSNs, sensitive identity documents, passwords, cards, RAI credentials, or customer information into GitHub, D1 demo forms, or tickets. No actual fulfillment/payment automation is included.
+
+## Developer validation
+
+From `admin-worker/`: run `npm install` then `npm test` for local tests. CI runs the security/test suite on GitHub. Tests do not prove the deployed Cloudflare Worker is identical to this source.
+
+This GitHub project also hosts a public static website; protected administrative content must stay on Cloudflare Access-protected Worker routes.
