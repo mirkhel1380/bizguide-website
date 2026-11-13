@@ -22,7 +22,8 @@ test('uses a parameter binding for status filtering', async () => {
     } };
   } };
   assert.deepEqual(await listOrders(db, 'quote_requested'), rows);
-  assert.match(calls[0][1], /WHERE status = \?/);
+  assert.match(calls[0][1], /WHERE o\.status = \?/);
+  assert.match(calls[0][1], /AS services/);
   assert.equal(calls[1][1], 'quote_requested');
 });
 test('applies a 50-row cap without status filter', async () => {
@@ -33,5 +34,5 @@ test('applies a 50-row cap without status filter', async () => {
   } };
   assert.deepEqual(await listOrders(db), []);
   assert.match(sql, /LIMIT 50$/);
-  assert.doesNotMatch(sql, /WHERE status =/);
+  assert.doesNotMatch(sql, /WHERE o\.status =/);
 });
