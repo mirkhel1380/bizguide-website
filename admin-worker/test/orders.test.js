@@ -36,3 +36,15 @@ test('applies a 50-row cap without status filter', async () => {
   assert.match(sql, /LIMIT 50$/);
   assert.doesNotMatch(sql, /WHERE o\.status =/);
 });
+
+test('includes service codes through a read-only subquery', async () => {
+  let sql;
+  const db = {prepare(query) {
+    sql=query;
+    return {async all(){return {results:[{id:'DEMO-1',services:'llc_formation'}]};}};
+  }};
+  const result=await listOrders(db);
+  assert.deepEqual(result,[{id:'DEMO-1',services:'llc_formation'}]);
+  assert.match(sql,/GROUP_CONCAT\(s\.service_code/);
+  assert.match(sql,/s\.order_id = o\.id/);
+});
