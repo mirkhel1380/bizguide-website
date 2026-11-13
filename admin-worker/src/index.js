@@ -1,7 +1,7 @@
 /**
  * BizGuide admin API starter — NOT DEPLOYED.
- * Protected order reading, with an optional disabled-by-default staff quote-draft endpoint.
- * No payment endpoints, order mutations, RAI requests or customer PII.
+ * Protected order metadata, audit history, and feature-gated staff-only actions.
+ * No payment endpoints, RAI requests, or customer PII.
  */
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { dashboardHtml } from "./dashboard.js";
@@ -128,7 +128,11 @@ export default {
       } });
     }
     if (url.pathname === "/api/admin/health") {
-      return json({ ok: true, mode: "read-only", liveOrdersEnabled: false });
+      if (!env.DB) return json({ error: "Database unavailable" }, 503);
+      try {
+        const count = await env.DB.prepare("SELECT COUNT(*) AS total FROM orders").first();
+        return json({service:"BizGuide Admin", database:"connected", orders:count?.total ?? 0});
+      } catch { return json({error:"Database error"},503); }
     }
     if (url.pathname === "/api/admin/order-history") {
       if (!env.DB) return json({error:"Database unavailable"},503);
@@ -147,7 +151,7 @@ export default {
     if (status && !allowedStatuses.has(status)) return json({ error: "Invalid status" }, 400);
     try {
       const results = await listOrders(env.DB, status);
-      return json({ orders: results, mode: "read-only" });
+      return json({ orders: results });
     } catch {
       return json({ error: "Orders are not ready" }, 503);
     }
