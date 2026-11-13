@@ -1,10 +1,15 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>BizGuide | Admin Orders</title>
 <style>
-:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#f3f7fb;color:#17334a}*{box-sizing:border-box}body{margin:0}header{background:#17364c;color:#fff;padding:22px max(22px,calc((100vw - 1100px)/2));display:flex;justify-content:space-between;align-items:center}main{max-width:1100px;margin:auto;padding:40px 22px}h1{margin:8px 0 10px}.muted{color:#52677b}.notice{padding:14px 17px;border-radius:12px;background:#e8f3f4;margin:22px 0}.panel{background:white;border:1px solid #dee7ef;border-radius:16px;padding:22px;overflow:auto}table{border-collapse:collapse;width:100%;min-width:650px}th,td{text-align:left;padding:13px;border-bottom:1px solid #e6edf3}th{font-size:.78rem;text-transform:uppercase;color:#60758a}button,select{border:1px solid #ccd9e4;border-radius:9px;padding:10px;background:#fff;color:#17364c}button{cursor:pointer}#message{margin:14px 0}footer{font-size:.85rem;color:#687b8d;margin-top:30px}
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#f3f7fb;color:#17334a}*{box-sizing:border-box}body{margin:0}header{background:#17364c;color:#fff;padding:22px max(22px,calc((100vw - 1100px)/2));display:flex;justify-content:space-between;align-items:center}main{max-width:1100px;margin:auto;padding:40px 22px}h1{margin:8px 0 10px}.muted{color:#52677b}.notice{padding:14px 17px;border-radius:12px;background:#e8f3f4;margin:22px 0}.panel{background:white;border:1px solid #dee7ef;border-radius:16px;padding:22px;overflow:auto}table{border-collapse:collapse;width:100%;min-width:650px}th,td{text-align:left;padding:13px;border-bottom:1px solid #e6edf3}th{font-size:.78rem;text-transform:uppercase;color:#60758a}button,select{border:1px solid #ccd9e4;border-radius:9px;padding:10px;background:#fff;color:#17364c}button{cursor:pointer}.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0 24px}.summary article{background:#fff;border:1px solid #dee7ef;border-radius:14px;padding:20px}.summary strong{display:block;font-size:28px;margin-top:8px;color:#137b75}@media(max-width:650px){.summary{grid-template-columns:1fr}}#message{margin:14px 0}footer{font-size:.85rem;color:#687b8d;margin-top:30px}
 </style></head><body>
 <header><strong>BizGuide · Admin</strong><span>Protected operations</span></header>
 <main><h1>Order overview</h1><p class="muted">Read-only metadata. This screen requires verified Cloudflare Access authentication.</p><p class="notice">Orders cannot be edited, paid or submitted to RAI from this page.</p>
+<div class="summary" aria-label="Order summary">
+<article>Total Orders<strong id="total">0</strong></article>
+<article>Pending Orders<strong id="pending">0</strong></article>
+<article>Completed Orders<strong id="complete">0</strong></article>
+</div>
 <div class="panel"><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between"><h2>Orders</h2><div><label for="filter">Status </label><select id="filter"><option value="">All</option><option value="quote_requested">Quote requested</option><option value="paid_verified">Payment verified</option><option value="review_required">Review required</option><option value="submitted_to_provider">Submitted</option><option value="processing">Processing</option><option value="complete">Complete</option></select> <button type="button" id="refresh">Refresh</button></div></div>
 <p id="message" role="status">Loading...</p><table><thead><tr><th>Order ID</th><th>Service</th><th>State</th><th>Status</th><th>Quoted total</th><th>Created</th><th>Review</th><th>History</th></tr></thead><tbody id="orders"></tbody></table></div>
 <section class="panel" style="margin-top:24px" aria-labelledby="new-quote-title">
@@ -46,6 +51,10 @@ const response=await fetch('/api/admin/orders'+query,{credentials:'same-origin',
 if(!response.ok)throw Error('Unable to load orders (HTTP '+response.status+').');
 const data=await response.json();
 if(!Array.isArray(data.orders))throw Error('Unexpected response.');
+// Summary counts reflect the displayed (up to 50) rows, matching the previous live dashboard.
+document.getElementById('total').textContent=data.orders.length;
+document.getElementById('pending').textContent=data.orders.filter(x=>!['complete','cancelled','refunded'].includes(x.status)).length;
+document.getElementById('complete').textContent=data.orders.filter(x=>x.status==='complete').length;
 for(const item of data.orders){
 const tr=document.createElement('tr');
 add(tr,String(item.id??''));add(tr,String(item.services??'—'));add(tr,String(item.state_code??''));add(tr,String(item.status??''));
