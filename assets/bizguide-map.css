@@ -1,1 +1,3 @@
 .brand img,.footer-logo img{display:block;width:150px;height:auto;max-width:100%}.footer-logo img{background:#fff;border-radius:8px;padding:7px;box-sizing:content-box}@media(max-width:680px){.brand img{width:128px}}
+
+.bizguide-mini-mark{display:block;width:100%;height:100%;border-radius:inherit;object-fit:contain}.plan-mark,.byline-mark{flex-shrink:0}
